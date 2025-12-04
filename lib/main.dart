@@ -32,8 +32,7 @@ class Wrapper extends StatelessWidget {
 // Initialisation de Firebase et de l\'application
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // IMPORTANT : Assurez-vous d\'avoir configuré Firebase pour votre plateforme
-  // (voir étape 4)
+
   await Firebase.initializeApp();
   runApp(const MyApp());
 }
