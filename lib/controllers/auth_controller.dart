@@ -10,56 +10,99 @@ class AuthController {
   // Stream pour suivre l'état de l'utilisateur
   Stream<UserModel?> get userStream => _authService.user;
 
-  // Inscription
+  // --- INSCRIPTION ---
   Future<String?> register(
       BuildContext context, String name, String email, String password) async {
     try {
       await _authService.registerWithEmailAndPassword(email, password);
-      // Après inscription, on redirige vers la page de connexion comme demandé
+
+      if (!context.mounted) return null;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginView()),
       );
-      return null; // Succès
+      return null;
     } catch (e) {
-      return e.toString(); // Échec
+      return e.toString();
     }
   }
 
-  // Connexion
+  // --- CONNEXION EMAIL ---
   Future<String?> login(
       BuildContext context, String email, String password) async {
     try {
       await _authService.signInWithEmailAndPassword(email, password);
-      // Après connexion, on redirige vers la page d'accueil
+
+      if (!context.mounted) return null;
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const HomeView()),
       );
-      return null; // Succès
+      return null;
     } catch (e) {
-      return e.toString(); // Échec
+      return e.toString();
     }
   }
 
-  // Déconnexion
+  // --- CONNEXION GOOGLE ---
+  Future<void> loginWithGoogle(BuildContext context) async {
+    try {
+      await _authService.signInWithGoogle();
+
+      if (!context.mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeView()),
+      );
+    } catch (e) {
+      debugPrint("Erreur Google Controller: $e");
+    }
+  }
+
+  // --- CONNEXION X (TWITTER) + SHARED PREFERENCES ---
+  // Cette méthode manquait et causait ton erreur !
+  Future<void> loginWithX(BuildContext context, String username) async {
+    try {
+      // On utilise le service pour sauvegarder dans les Shared Preferences
+      await _authService.signInWithX(username);
+
+      if (!context.mounted) return;
+
+      // Redirection après simulation de connexion réussie
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeView()),
+      );
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Bienvenue (via X) : $username")),
+      );
+    } catch (e) {
+      debugPrint("Erreur X Controller: $e");
+    }
+  }
+
+  // --- DÉCONNEXION ---
   Future<void> logout(BuildContext context) async {
     await _authService.signOut();
-    // Après déconnexion, on redirige vers la page de connexion
+
+    if (!context.mounted) return;
+
     Navigator.pushAndRemoveUntil(
       context,
       MaterialPageRoute(builder: (context) => const LoginView()),
-      (Route<dynamic> route) => false,
+          (Route<dynamic> route) => false,
     );
   }
 
-  // Protection d'accès : vérifie si l'utilisateur est connecté et redirige si nécessaire
+  // Protection d'accès
   Widget handleAuthChanges(BuildContext context, UserModel? user) {
     if (user == null) {
-      // Si l'utilisateur n'est pas connecté, on le renvoie vers Login
       return const LoginView();
     } else {
-      // Si l'utilisateur est connecté, on le renvoie vers Home
       return const HomeView();
     }
   }

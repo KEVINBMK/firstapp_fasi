@@ -1,64 +1,75 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import '../models/user_model.dart';
+import 'pref_service.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
 
-  // Stream pour suivre l'état de l'utilisateur (connecté/déconnecté)
+  // Stream pour l'état de l'utilisateur
   Stream<UserModel?> get user {
     return _auth.authStateChanges().map(_userFromFirebaseUser);
   }
 
-  // Convertir l'objet Firebase User en UserModel
   UserModel? _userFromFirebaseUser(User? user) {
     return user != null
-        ? UserModel(
-            uid: user.uid,
-            email: user.email,
-            name: user.displayName, // Le nom n'est pas géré ici, mais on le garde pour la structure
-          )
+        ? UserModel(uid: user.uid, email: user.email, name: user.displayName)
         : null;
   }
 
-  // Inscription avec email et mot de passe
-  Future<UserModel?> registerWithEmailAndPassword(
-      String email, String password) async {
+  // --- MÉTHODE 1 : INSCRIPTION EMAIL (Manquante dans ton erreur) ---
+  Future<UserModel?> registerWithEmailAndPassword(String email, String password) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
           email: email, password: password);
-      User? user = result.user;
-      return _userFromFirebaseUser(user);
-    } on FirebaseAuthException catch (e) {
-      // Gérer les erreurs spécifiques de Firebase Auth
-      throw e.message ?? "Une erreur inconnue est survenue lors de l'inscription.";
+      return _userFromFirebaseUser(result.user);
     } catch (e) {
+      debugPrint("Erreur Inscription: $e");
       rethrow;
     }
   }
 
-  // Connexion avec email et mot de passe
-  Future<UserModel?> signInWithEmailAndPassword(
-      String email, String password) async {
+  // --- MÉTHODE 2 : CONNEXION EMAIL (Manquante dans ton erreur) ---
+  Future<UserModel?> signInWithEmailAndPassword(String email, String password) async {
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
-      User? user = result.user;
-      return _userFromFirebaseUser(user);
-    } on FirebaseAuthException catch (e) {
-      // Gérer les erreurs spécifiques de Firebase Auth
-      throw e.message ?? "Une erreur inconnue est survenue lors de la connexion.";
+      return _userFromFirebaseUser(result.user);
     } catch (e) {
+      debugPrint("Erreur Connexion: $e");
       rethrow;
     }
   }
 
-  // Déconnexion
-  Future<void> signOut() async {
+  // --- MÉTHODE 3 : GOOGLE ---
+  Future<UserModel?> signInWithGoogle() async {
     try {
-      return await _auth.signOut();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) return null;
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+      UserCredential result = await _auth.signInWithCredential(credential);
+      return _userFromFirebaseUser(result.user);
     } catch (e) {
-      print(e.toString());
+      debugPrint("Erreur Google: $e");
       return null;
     }
+  }
+
+  // --- MÉTHODE 4 : X (Twitter) + Shared Preferences ---
+  Future<void> signInWithX(String username) async {
+    await PrefService.saveUserX(username);
+  }
+
+  // --- MÉTHODE 5 : DÉCONNEXION ---
+  Future<void> signOut() async {
+    await _googleSignIn.signOut();
+    await PrefService.removeUser();
+    await _auth.signOut();
   }
 }

@@ -1,5 +1,3 @@
-// build.gradle.kts (niveau projet)
-
 buildscript {
     repositories {
         google()

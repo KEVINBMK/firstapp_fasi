@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
+    id("com.google.gms.google-services") // Firebase plugin
 }
 
 android {
@@ -38,4 +39,11 @@ flutter {
     source = "../.."
 }
 
-apply(plugin = "com.google.gms.google-services")
+//Dpendances AndroidX et Firebase
+dependencies {
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("com.google.firebase:firebase-auth-ktx:22.1.2")
+    implementation("com.google.firebase:firebase-analytics-ktx:22.1.2")
+
+}

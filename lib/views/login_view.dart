@@ -1,102 +1,65 @@
 import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
-import '../utils/validators.dart';
-import '../widgets/custom_button.dart';
 import 'register_view.dart';
 
-class LoginView extends StatefulWidget {
+class LoginView extends StatelessWidget {
   const LoginView({super.key});
 
   @override
-  State<LoginView> createState() => _LoginViewState();
-}
-
-class _LoginViewState extends State<LoginView> {
-  final _formKey = GlobalKey<FormState>();
-  final AuthController _authController = AuthController();
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-  bool _isLoading = false;
-
-  void _login() async {
-    if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-
-      String? error = await _authController.login(
-        context,
-        _emailController.text,
-        _passwordController.text,
-      );
-
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-
-        if (error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur de connexion: $error')),
-          );
-        }
-      }
-    }
-  }
-
-  @override
   Widget build(BuildContext context) {
+    final AuthController authController = AuthController();
+    final TextEditingController emailController = TextEditingController();
+    final TextEditingController passwordController = TextEditingController();
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Connexion'),
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Center(
+      appBar: AppBar(title: const Text("Connexion")),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: <Widget>[
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: Validators.validateEmail,
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Mot de passe',
-                    border: OutlineInputBorder(),
-                  ),
-                  validator: Validators.validatePassword,
-                ),
-                const SizedBox(height: 24),
-                CustomButton(
-                  text: 'Se connecter',
-                  onPressed: _login,
-                  isLoading: _isLoading,
-                ),
-                const SizedBox(height: 16),
-                TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => const RegisterView()),
-                    );
-                  },
-                  child: const Text('Pas encore de compte ? Inscrivez-vous'),
-                ),
-              ],
-            ),
+          child: Column(
+            children: [
+              const Icon(Icons.lock_outline, size: 80, color: Colors.deepPurple),
+              const SizedBox(height: 20),
+              TextField(controller: emailController, decoration: const InputDecoration(labelText: "Email")),
+              TextField(controller: passwordController, decoration: const InputDecoration(labelText: "Mot de passe"), obscureText: true),
+              const SizedBox(height: 20),
+
+              // Bouton Email
+              ElevatedButton(
+                onPressed: () => authController.login(context, emailController.text, passwordController.text),
+                child: const Text("Se connecter"),
+              ),
+
+              const Divider(height: 40),
+
+              // Bouton Google
+              ListTile(
+                leading: const Icon(Icons.android, color: Colors.green),
+                title: const Text("Continuer avec Google"),
+                onTap: () => authController.loginWithGoogle(context),
+                tileColor: Colors.grey[200],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+
+              const SizedBox(height: 10),
+
+              // Bouton X (Twitter)
+              ListTile(
+                leading: const Icon(Icons.close, color: Colors.black), // Logo X
+                title: const Text("Continuer avec X"),
+                onTap: () {
+                  // On simule l'auth X avec un username fixe pour le TP
+                  authController.loginWithX(context, "Utilisateur_X");
+                },
+                tileColor: Colors.grey[200],
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+
+              TextButton(
+                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterView())),
+                child: const Text("Pas de compte ? S'inscrire"),
+              ),
+            ],
           ),
         ),
       ),
