@@ -9,7 +9,8 @@ Le projet met l’accent sur la clarté du code, la séparation des responsabili
 
 ## Informations Générales
 
-- Noms : Kevin Bitubisha Mbemba
+- Noms :
+-        Kevin Bitubisha Mbemba
 -        Kabengele Bukasa Melvin
 -        Kabengele Kabengele Dieuvie
 -        Tshilumba Tshilumba Jonathan
