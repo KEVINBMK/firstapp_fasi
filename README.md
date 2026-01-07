@@ -10,7 +10,7 @@ Le projet met l’accent sur la clarté du code, la séparation des responsabili
 ## Informations Générales
 
 - Nom : Kevin Bitubisha Mbemba
-- Filière : L4 LMD FASI
+- Filière : L4 LMD FASI/ INGENIERIE LOGICIEL
 - Université Protestante au Congo
 - Statut du projet : Travail terminé et validé
 
