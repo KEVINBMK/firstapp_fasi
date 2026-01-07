@@ -13,13 +13,14 @@ class AuthService {
     return _auth.authStateChanges().map(_userFromFirebaseUser);
   }
 
+  // Convertir Firebase User en UserModel
   UserModel? _userFromFirebaseUser(User? user) {
     return user != null
         ? UserModel(uid: user.uid, email: user.email, name: user.displayName)
         : null;
   }
 
-  // --- MÉTHODE 1 : INSCRIPTION EMAIL (Manquante dans ton erreur) ---
+  // --- INSCRIPTION EMAIL ---
   Future<UserModel?> registerWithEmailAndPassword(String email, String password) async {
     try {
       UserCredential result = await _auth.createUserWithEmailAndPassword(
@@ -31,11 +32,17 @@ class AuthService {
     }
   }
 
-  // --- MÉTHODE 2 : CONNEXION EMAIL (Manquante dans ton erreur) ---
+  // --- CONNEXION EMAIL ---
   Future<UserModel?> signInWithEmailAndPassword(String email, String password) async {
     try {
       UserCredential result = await _auth.signInWithEmailAndPassword(
           email: email, password: password);
+
+      // Sauvegarde du displayName dans SharedPreferences
+      if (result.user != null && result.user!.displayName != null) {
+        await PrefService.saveUserX(result.user!.displayName!);
+      }
+
       return _userFromFirebaseUser(result.user);
     } catch (e) {
       debugPrint("Erreur Connexion: $e");
@@ -43,17 +50,26 @@ class AuthService {
     }
   }
 
-  // --- MÉTHODE 3 : GOOGLE ---
+  // --- GOOGLE SIGN-IN ---
   Future<UserModel?> signInWithGoogle() async {
     try {
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
       if (googleUser == null) return null;
+
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      final AuthCredential credential = GoogleAuthProvider.credential(
+
+      final credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,
       );
+
       UserCredential result = await _auth.signInWithCredential(credential);
+
+      // Sauvegarde du displayName dans SharedPreferences
+      if (result.user != null && result.user!.displayName != null) {
+        await PrefService.saveUserX(result.user!.displayName!);
+      }
+
       return _userFromFirebaseUser(result.user);
     } catch (e) {
       debugPrint("Erreur Google: $e");
@@ -61,15 +77,20 @@ class AuthService {
     }
   }
 
-  // --- MÉTHODE 4 : X (Twitter) + Shared Preferences ---
-  Future<void> signInWithX(String username) async {
-    await PrefService.saveUserX(username);
+  // --- X (Twitter) + SharedPreferences ---
+  Future<UserModel> signInWithX(String username) async {
+    await PrefService.saveUserX(username); // sauvegarde local
+    return UserModel(uid: 'x_$username', email: null, name: username);
   }
 
-  // --- MÉTHODE 5 : DÉCONNEXION ---
+  // --- DÉCONNEXION ---
   Future<void> signOut() async {
-    await _googleSignIn.signOut();
-    await PrefService.removeUser();
-    await _auth.signOut();
+    try {
+      await _googleSignIn.signOut();       // Google sign out
+      await PrefService.removeUser();      // Supprimer user X
+      await _auth.signOut();               // Firebase sign out
+    } catch (e) {
+      debugPrint("Erreur Déconnexion: $e");
+    }
   }
 }

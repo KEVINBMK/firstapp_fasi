@@ -13,9 +13,9 @@ class PrefService {
     return prefs.getString('user_x');
   }
 
-  // Supprimer les données (Logout)
+  // Supprimer les données utilisateur (logout)
   static Future<void> removeUser() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
-    await prefs.remove('user_x');
+    await prefs.remove('user_x'); // supprime le nom sauvegardé
   }
 }

@@ -19,20 +19,28 @@ class _ProduitFormState extends State<ProduitForm> {
       try {
         await FirebaseFirestore.instance.collection('produits').add({
           'nom': _nomController.text,
-          'prix': _prixController.text,
+          'prix': double.parse(_prixController.text),
           'date': Timestamp.now(),
         });
+
         if (!mounted) return;
+
         _nomController.clear();
         _prixController.clear();
+
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Produit ajouté !')),
+          const SnackBar(content: Text('Produit ajouté avec succès')),
+        );
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur : $e')),
         );
       } finally {
         if (mounted) setState(() => _isLoading = false);
       }
     }
   }
+
 
   @override
   Widget build(BuildContext context) {

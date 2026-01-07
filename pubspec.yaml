@@ -40,7 +40,8 @@ dependencies:
   cloud_firestore: ^6.1.1
   shared_preferences: ^2.5.4
   google_sign_in: 6.2.1
-
+  twitter_login:
+    path: ./plugins/twitter_login
 dev_dependencies:
   flutter_test:
     sdk: flutter

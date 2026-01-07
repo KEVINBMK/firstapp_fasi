@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../services/pref_service.dart';
 import '../services/auth_service.dart';
 import '../models/user_model.dart';
 import '../views/home_view.dart';
@@ -10,17 +12,29 @@ class AuthController {
   // Stream pour suivre l'état de l'utilisateur
   Stream<UserModel?> get userStream => _authService.user;
 
-  // --- INSCRIPTION ---
+  // --- INSCRIPTION EMAIL ---
   Future<String?> register(
-      BuildContext context, String name, String email, String password) async {
+      BuildContext context,
+      String name,
+      String email,
+      String password,
+      ) async {
     try {
-      await _authService.registerWithEmailAndPassword(email, password);
+      UserCredential userCredential =
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
 
-      if (!context.mounted) return null;
+      // 1️⃣ Enregistrer le nom dans Firebase Auth
+      await userCredential.user!.updateDisplayName(name);
+
+      // 2️⃣ Enregistrer le nom dans SharedPreferences
+      await PrefService.saveUserX(name);
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const LoginView()),
+        MaterialPageRoute(builder: (_) => const HomeView()),
       );
       return null;
     } catch (e) {
@@ -29,59 +43,60 @@ class AuthController {
   }
 
   // --- CONNEXION EMAIL ---
-  Future<String?> login(
-      BuildContext context, String email, String password) async {
+  Future<void> login(BuildContext context, String email, String password) async {
     try {
-      await _authService.signInWithEmailAndPassword(email, password);
+      final user = await _authService.signInWithEmailAndPassword(email, password);
 
-      if (!context.mounted) return null;
+      if (!context.mounted) return;
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeView()),
+        MaterialPageRoute(builder: (_) => const HomeView()),
       );
-      return null;
     } catch (e) {
-      return e.toString();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur connexion: $e")),
+      );
     }
   }
 
   // --- CONNEXION GOOGLE ---
   Future<void> loginWithGoogle(BuildContext context) async {
     try {
-      await _authService.signInWithGoogle();
+      final user = await _authService.signInWithGoogle();
 
       if (!context.mounted) return;
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeView()),
+        MaterialPageRoute(builder: (_) => const HomeView()),
       );
     } catch (e) {
-      debugPrint("Erreur Google Controller: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur Google: $e")),
+      );
     }
   }
 
-  // --- CONNEXION X (TWITTER) + SHARED PREFERENCES ---
-  // Cette méthode manquait et causait ton erreur !
+  // --- CONNEXION X (TWITTER) ---
   Future<void> loginWithX(BuildContext context, String username) async {
     try {
-      // On utilise le service pour sauvegarder dans les Shared Preferences
-      await _authService.signInWithX(username);
+      final user = await _authService.signInWithX(username);
 
       if (!context.mounted) return;
 
-      // Redirection après simulation de connexion réussie
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeView()),
+        MaterialPageRoute(builder: (_) => const HomeView()),
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Bienvenue (via X) : $username")),
+        SnackBar(content: Text("Bienvenue via X : ${user.name}")),
       );
     } catch (e) {
-      debugPrint("Erreur X Controller: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur X: $e")),
+      );
     }
   }
 
@@ -93,7 +108,7 @@ class AuthController {
 
     Navigator.pushAndRemoveUntil(
       context,
-      MaterialPageRoute(builder: (context) => const LoginView()),
+      MaterialPageRoute(builder: (_) => const LoginView()),
           (Route<dynamic> route) => false,
     );
   }

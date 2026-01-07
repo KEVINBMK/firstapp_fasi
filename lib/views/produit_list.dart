@@ -7,22 +7,38 @@ class ProduitList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<QuerySnapshot>(
-      stream: FirebaseFirestore.instance.collection('produits').orderBy('date', descending: true).snapshots(),
+      stream: FirebaseFirestore.instance
+          .collection('produits')
+          .orderBy('date', descending: true)
+          .snapshots(),
       builder: (context, snapshot) {
-        if (snapshot.hasError) return const Text('Erreur');
-        if (snapshot.connectionState == ConnectionState.waiting) return const CircularProgressIndicator();
+        if (snapshot.hasError) {
+          return const Center(child: Text('Erreur Firestore'));
+        }
+
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+          return const Center(child: Text('Aucun produit'));
+        }
 
         return ListView.builder(
           itemCount: snapshot.data!.docs.length,
           itemBuilder: (context, index) {
-            var doc = snapshot.data!.docs[index];
-            var produit = doc.data() as Map<String, dynamic>;
+            final doc = snapshot.data!.docs[index];
+            final produit = doc.data() as Map<String, dynamic>;
+
             return ListTile(
               title: Text(produit['nom']),
               subtitle: Text("${produit['prix']} \$"),
               trailing: IconButton(
                 icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () => FirebaseFirestore.instance.collection('produits').doc(doc.id).delete(),
+                onPressed: () => FirebaseFirestore.instance
+                    .collection('produits')
+                    .doc(doc.id)
+                    .delete(),
               ),
             );
           },

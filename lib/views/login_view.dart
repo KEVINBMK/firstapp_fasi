@@ -1,66 +1,77 @@
 import 'package:flutter/material.dart';
+import 'login_email_view.dart';
+import 'login_x_view.dart';
 import '../controllers/auth_controller.dart';
-import 'register_view.dart';
 
-class LoginView extends StatelessWidget {
+class LoginView extends StatefulWidget {
   const LoginView({super.key});
 
   @override
+  State<LoginView> createState() => _LoginViewState();
+}
+
+class _LoginViewState extends State<LoginView> {
+  // On initialise le contrôleur ici
+  final AuthController _authController = AuthController();
+  bool _isGoogleLoading = false;
+
+  @override
   Widget build(BuildContext context) {
-    final AuthController authController = AuthController();
-    final TextEditingController emailController = TextEditingController();
-    final TextEditingController passwordController = TextEditingController();
-
     return Scaffold(
-      appBar: AppBar(title: const Text("Connexion")),
+      appBar: AppBar(
+        title: const Text("Connexion"),
+        centerTitle: true,
+      ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: SingleChildScrollView(
-          child: Column(
-            children: [
-              const Icon(Icons.lock_outline, size: 80, color: Colors.deepPurple),
-              const SizedBox(height: 20),
-              TextField(controller: emailController, decoration: const InputDecoration(labelText: "Email")),
-              TextField(controller: passwordController, decoration: const InputDecoration(labelText: "Mot de passe"), obscureText: true),
-              const SizedBox(height: 20),
-
-              // Bouton Email
-              ElevatedButton(
-                onPressed: () => authController.login(context, emailController.text, passwordController.text),
-                child: const Text("Se connecter"),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // --- CONNEXION EMAIL ---
+            ElevatedButton.icon(
+              icon: const Icon(Icons.email),
+              label: const Text("Se connecter avec Email"),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginEmailView()),
               ),
+            ),
+            const SizedBox(height: 15),
 
-              const Divider(height: 40),
-
-              // Bouton Google
-              ListTile(
-                leading: const Icon(Icons.android, color: Colors.green),
-                title: const Text("Continuer avec Google"),
-                onTap: () => authController.loginWithGoogle(context),
-                tileColor: Colors.grey[200],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            // --- CONNEXION GOOGLE ---
+            // On n'ouvre pas de page, on appelle directement le service
+            OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Colors.red),
+                foregroundColor: Colors.red,
               ),
+              icon: _isGoogleLoading
+                  ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red))
+                  : const Icon(Icons.g_mobiledata, size: 30),
+              label: const Text("Continuer avec Google"),
+              onPressed: _isGoogleLoading ? null : () async {
+                setState(() => _isGoogleLoading = true);
+                await _authController.loginWithGoogle(context);
+                if (mounted) setState(() => _isGoogleLoading = false);
+              },
+            ),
+            const SizedBox(height: 15),
 
-              const SizedBox(height: 10),
-
-              // Bouton X (Twitter)
-              ListTile(
-                leading: const Icon(Icons.close, color: Colors.black), // Logo X
-                title: const Text("Continuer avec X"),
-                onTap: () {
-                  // On simule l'auth X avec un username fixe pour le TP
-                  authController.loginWithX(context, "Utilisateur_X");
-                },
-                tileColor: Colors.grey[200],
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            // --- CONNEXION X ---
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.black,
+                foregroundColor: Colors.white,
               ),
-
-              TextButton(
-                onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterView())),
-                child: const Text("Pas de compte ? S'inscrire"),
+              icon: const Icon(Icons.close), // Icône X
+              label: const Text("Se connecter avec X"),
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginXView()),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
