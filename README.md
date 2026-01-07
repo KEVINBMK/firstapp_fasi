@@ -15,7 +15,7 @@ Le projet met l’accent sur la clarté du code, la séparation des responsabili
 -        Kabengele Kabengele Dieuvie
 -        Tshilumba Tshilumba Jonathan
 -        Monsheviale Kilor Chris 
-- Filière : L4 LMD FASI/ INGENIERIE LOGICIEL
+- Filière : L4 LMD FASI
 - Université Protestante au Congo
 - Statut du projet : Travail terminé et validé
 
